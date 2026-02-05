@@ -1,0 +1,208 @@
+---
+title: 'PREDICTIVE ANALYTICS
+        Problem Set 2'
+author: "Amrita Nath"
+date: "2026-01-30"
+output: html_document
+---
+*1 Problem to demonstrate that the population regression line is fixed, but least square regression line varies*
+Suppose the population regression line is given by Y = 2 + 3x, while the data
+comes from the model y = 2+3x+ϵ.
+Step 1: For x in the range [5,10] graph the population regression line.
+```{r}
+rm(list=ls())
+x=seq(5,10,length.out=200)
+y=2+3*x
+plot(x,y,main="Popultion Regresion Line",type="l")
+
+```
+
+Step 2: Generate xi(i = 1,2,..,n) from Uniform(5,10) and ϵi(i = 1,2,..,n)
+from N(0,42). Hence, compute y1,y2,..,yn.
+```{r}
+set.seed(123)
+x_i=runif(50,5,10)
+e_i=rnorm(50,0,4)
+y_i=2+(3*x_i)+e_i
+y_i
+plot(x,y,main="Popultion Regresion Line",type="l")
+points(x_i,y_i)
+```
+
+Step 3: On the basis of the data (xi,yi)(i = 1,2,..,n) generated in Step 2,
+report the least squares regression line.
+```{r}
+model1=lm(y_i~x_i)
+coeff1=coefficients(model1)
+summary(model1)
+
+y_hat=-0.09639 +3.30540*x_i
+plot(x,y,type="l")
+lines(x_i,y_hat,col="red")
+legend("topleft",legend=c("PRF","SRF"),col=c("black","red"),lty=1:2)
+```
+
+Step 4: Repeat steps 2-3 five times. Graph the 5 least squares regression lines
+over the population regression line obtained in Step 1.
+Interpret the findings.
+Take n = 50. Set the seed as seed=123
+```{r}
+plot(x,y,type="l")
+coeff=matrix(0,5,2)
+for (i in 1:5){
+  x=runif(50,5,10)
+  e=rnorm(50,0,4)
+  y=2+(3*x)+e
+  model=lm(y~x)
+  coeff[i,]=coef(model)
+  abline(model, lwd = 2)
+  summary(model)
+  
+  
+}
+coeff
+```
+
+*Interpretation*
+Although the population regression line is fixed, the sample regression line varies across samples due to random error in the data. Repeated sampling produces different fitted lines, all fluctuating around the true population regression line.
+
+*2 Problem to demonstrate that ˆβ0 and ˆβ minimises RSS*
+
+
+Step 1: Generate xi from Uniform(5, 10) and mean centre the values. Generate
+ϵi from N(0,1). Calculate yi = 2 + 3xi + ϵi, i = 1,2,.., n. Take n=50 and
+seed=123.
+```{r}
+set.seed(123)
+x=runif(50,5,10)
+x=x-mean(x)
+x
+e=rnorm(50,0,1)
+y=2+(3*x)+e
+y
+```
+
+Step 2: Now imagine that you only have the data on (xi,yi),i = 1,2,..,n,
+without knowing the mechanism that was used to generate the data in step 1.
+Assuming a linear regression of the type yi = β0 +βxi +ϵi, and based on these
+data (xi,yi),i = 1,2,..,n, obtain the least squares estimates of β0 and β.
+```{r}
+model=lm(y~x)
+summary(model)
+fit <- lm(y ~ x)
+beta0_hat=coef(fit)[1]
+beta_hat= coef(fit)[2]
+beta0_hat
+beta_hat
+```
+
+Step 3: Take a large number of grid values of (β0,β) that also include the least
+squares estimates obtained from step 2. Compute the RSS for each parametric
+choice of (β0,β), where RSS = (y1 −β0 −βx1)2 +(y2 −β0 −βx2)2 +....(yn −
+β0 −βxn)2. Find out for which combination of (β0,β), RSS is minimum.
+```{r}
+beta0_grid = seq(beta0_hat -2 , beta0_hat +2 , length.out = 100)
+beta_grid  = seq(beta_hat - 2, beta_hat + 2, length.out = 100)
+
+RSS <- matrix(0, nrow = length(beta0_grid), ncol = length(beta_grid))
+
+for (i in 1:length(beta0_grid)) 
+  {
+  for (j in 1:length(beta_grid)) 
+    {
+    RSS[i, j] <- sum((y - beta0_grid[i] - beta_grid[j]*x)^2)
+  }
+}
+RSS
+
+```
+
+*Interpretation*
+By evaluating RSS over a grid of (β0,β), we observe that RSS is minimized exactly at the least squares estimates.
+
+*3 Problem to demonstrate that least square estimators are unbiased*
+
+Step 1: Generate xi(i = 1,2,..,n) from Uniform(0,1), ϵi(i = 1,2,..,n) from
+N(0,1) and hence generate y using yi = β0 +βxi +ϵi. (Take β0 = 2,β = 3).
+Step 2: On the basis of the data (xi,yi)(i = 1,2,..,n) generated in Step 1,
+obtain the least square estimates of β0 and β.
+Repeat Steps 1-2, R = 1000 times. In each simulation obtain ˆβ0 and ˆβ. Finally,
+the least-square estimates will be given by the average of these estimated values.
+Compare these with the true β0 and β and comment.
+Take n = 50 and seed=123.
+```{r}
+set.seed(123)
+
+n = 50
+R = 1000
+
+beta0_hat =numeric(R)
+beta_hat  = numeric(R)
+
+for (r in 1:R) {
+  
+  
+  x = runif(n, 0, 1)
+  e= rnorm(n, mean = 0, sd = 1)
+  y = 2 + 3*x + e
+  
+  fit=lm(y ~ x)
+  
+  beta0_hat[r] = coef(fit)[1]
+  beta_hat[r]  = coef(fit)[2]
+}
+
+# Average of estimates
+mean_beta0_hat = mean(beta0_hat)
+mean_beta_hat  = mean(beta_hat)
+
+mean_beta0_hat
+mean_beta_hat
+
+```
+*Interpretation*
+Repeated sampling shows that although individual least squares estimates vary, their averages converge to the true parameter values. Hence, the least squares estimators of the intercept and slope are unbiased.
+
+*4 Comparing several simple linear regressions*
+Attach “Boston” data from MASS library in R. Select median value of owner
+occupied homes, as the response and per capita crime rate, nitrogen oxides
+concentration, proportion of blacks and percentage of lower status of the popu
+lation as predictors.
+(a) Selecting the predictors one by one, run four separate linear regressions to
+the data. Present the output in a single table.
+(b) Which model gives the best fit?
+(c) Compare the coefficients of the predictors from each model and comment on
+the usefulness of the predictors.
+```{r}
+library(MASS)
+attach(Boston)
+model1=lm(medv~crim)
+summary(model1)
+model2=lm(medv~nox)
+summary(model2)
+model3=lm(medv~black)
+summary(model3)
+model4=lm(medv~lstat)
+summary(model4)
+
+library(stargazer)
+stargazer(model1,model2,model3,model4,type="html",out="f1.html")
+
+```
+*Interpretation*
+
+
+crim:
+There is a negative correlation indicating higher crime rate is associated with lower house prices.
+
+nox:
+there seems to be strong negative relationship showing higher pollution lowers housing value.
+
+black:
+there is a positive relationship indicating higher proportion of blacks is associated with higher median value of house in this dataset.
+
+lstat:
+there is a significantly Strong negative relation indicating as percentage of lower-status population increases, median house value decreases sharply.
+
+Using stargazer, the four simple linear regression models are compared in a single table. All four predictors are statistically significant at 1% level of significance .Among them, the model with "lstat" as predictor provides the best fit, indicated by the highest R-square, showing that the percentage of lower-status population is the most influential predictor of median house value.
+
